@@ -24,10 +24,7 @@ build: build-prereqs \
 	zlib-build \
 	pcre-build \
 	openssl111-build \
-	openssl111-debug-build \
 	openresty-build \
-	openresty-debug-build \
-	openresty-valgrind-build \
 	lemplate-build \
 	test-nginx-build
 
@@ -36,10 +33,7 @@ clean: build-prereqs \
 	zlib-clean \
 	pcre-clean \
 	openssl111-clean \
-	openssl111-debug-clean \
 	openresty-clean \
-	openresty-debug-clean \
-	openresty-valgrind-clean \
 	lemplate-clean \
 	test-nginx-clean
 
@@ -51,19 +45,16 @@ distclean: clean
 download: zlib-download \
 	pcre-download \
 	openssl111-download \
-	openssl111-debug-download \
 	openresty-download \
-	openresty-debug-download \
-	openresty-valgrind-download \
 	lemplate-download \
 	test-nginx-download
 
 .PHONY: build-prereqs
 build-prereqs:
 ifneq ($(shell id -u), 0)
-	sudo apt-get -qq -y install autotools-dev debhelper
+	sudo apt-get -qq -y install autotools-dev debhelper wget libtemplate-perl
 else
-	apt-get -qq -y install autotools-dev debhelper
+	apt-get -qq -y install autotools-dev debhelper wget libtemplate-perl
 endif
 
 .PHONY: zlib-download
@@ -155,47 +146,6 @@ openssl111-clean:
 	rm -f openresty-openssl111-dbgsym_$(SSL111_VER)*.deb
 	rm -f openresty-openssl111_$(SSL111_VER)*.*
 
-.PHONY: openssl111-debug-download
-openssl111-debug-download:
-	rm -f openresty-openssl111-debug_$(SSL111_VER).orig.tar.gz
-	wget -nH --cut-dirs=100 --mirror 'https://www.openssl.org/source/openssl-$(SSL111_VER).tar.gz'
-	cp openssl-$(SSL111_VER).tar.gz openresty-openssl111-debug_$(SSL111_VER).orig.tar.gz
-
-.PHONY: openssl111-debug-build
-openssl111-debug-build: | build-prereqs openssl111-debug-prereqs openssl111-debug-clean openssl111-debug-download
-	tar xf openresty-openssl111-debug_$(SSL111_VER).orig.tar.gz --strip-components=1 -C openresty-openssl111-debug
-	cd openresty-openssl111-debug \
-		&& tpage --define distro=$(DISTRO) debian/changelog.tt2 > debian/changelog \
-		&& debuild -sa $(OPTS) -j$(JOBS)
-	#for f in openresty-openssl111-debug*.deb; do debsigs --sign=origin -K D5EDEB74 $$f || exit 1; done
-	if [ -f ./upload ]; then ./upload || exit 1; fi
-
-.PHONY: openssl111-debug-prereqs
-openssl111-debug-prereqs:
-ifneq ($(shell id -u), 0)
-ifeq ("$(wildcard $(openresty-zlib-dev_$(ZLIB_VER)*.deb))","")
-	sudo dpkg -i openresty-zlib-dev_$(ZLIB_VER)*.deb openresty-zlib_$(ZLIB_VER)*.deb
-else
-	sudo apt-get -qq -y install openresty-zlib-dev
-endif
-else
-ifeq ("$(wildcard $(openresty-zlib-dev_$(ZLIB_VER)*.deb))","")
-	dpkg -i openresty-zlib-dev_$(ZLIB_VER)*.deb openresty-zlib_$(ZLIB_VER)*.deb
-else
-	apt-get -qq -y install openresty-zlib-dev
-endif
-endif
-
-.PHONY: openssl111-debug-clean
-openssl111-debug-clean:
-	-cd openresty-openssl111-debug && debclean
-	rm -rf openresty-openssl111-debug/debian/tmp openresty-openssl111-debug/test openresty-openssl111-debug/*.a
-	find openresty-openssl111-debug -maxdepth 1 ! -name 'debian' ! -name 'openresty-openssl111-debug' -print | xargs rm -rf
-	rm -f openresty-openssl111-debug_$(SSL111_VER)*.deb
-	rm -f openresty-openssl111-debug-dev_$(SSL111_VER)*.deb
-	rm -f openresty-openssl111-debug-dbgsym_$(SSL111_VER)*.deb
-	rm -f openresty-openssl111-debug_$(SSL111_VER)*.*
-
 .PHONY: openresty-download
 openresty-download:
 	rm -f openresty_$(OR_VER).orig.tar.gz
@@ -229,7 +179,7 @@ ifeq ("$(wildcard $(openresty-openssl111-dev_$(SSL111_VER)*.deb))","")
 else
 	sudo apt-get -qq -y install openresty-openssl111-dev
 endif
-	sudo apt-get -qq -y install systemtap-sdt-dev dh-systemd
+	sudo apt-get -qq -y install systemtap-sdt-dev dh-systemd libmodsecurity-dev
 else
 ifeq ("$(wildcard $(openresty-zlib-dev_$(ZLIB_VER)*.deb))","")
 	dpkg -i openresty-zlib-dev_$(ZLIB_VER)*.deb openresty-zlib_$(ZLIB_VER)*.deb
@@ -246,7 +196,7 @@ ifeq ("$(wildcard $(openresty-openssl111-dev_$(SSL111_VER)*.deb))","")
 else
 	apt-get -qq -y install openresty-openssl111-dev
 endif
-	apt-get -qq -y install systemtap-sdt-dev dh-systemd
+	apt-get -qq -y install systemtap-sdt-dev dh-systemd libmodsecurity-dev
 endif
 
 .PHONY: openresty-clean
@@ -260,106 +210,6 @@ openresty-clean:
 	rm -f openresty-dev_$(OR_VER)*.deb
 	rm -f openresty-dbgsym_$(OR_VER)*.deb
 	rm -f openresty_$(OR_VER)*.*
-
-.PHONY: openresty-debug-download
-openresty-debug-download:
-	rm -f openresty-debug_$(OR_VER).orig.tar.gz
-	wget -nH --cut-dirs=100 --mirror 'https://openresty.org/download/openresty-$(OR_VER).tar.gz'
-	cp openresty-$(OR_VER).tar.gz openresty-debug_$(OR_VER).orig.tar.gz
-
-.PHONY: openresty-debug-build
-openresty-debug-build: | build-prereqs openresty-debug-prereqs openresty-debug-clean openresty-debug-download
-	tar xf openresty-debug_$(OR_VER).orig.tar.gz --strip-components=1 -C openresty-debug
-	cd openresty-debug \
-		&& tpage --define distro=$(DISTRO) debian/changelog.tt2 > debian/changelog \
-		&& debuild -sa $(OPTS) -j$(JOBS)
-	#for f in openresty-debug*.deb; do debsigs --sign=origin -K D5EDEB74 $$f || exit 1; done
-	if [ -f ./upload ]; then ./upload || exit 1; fi
-
-.PHONY: openresty-debug-prereqs
-openresty-debug-prereqs:
-ifneq ($(shell id -u), 0)
-ifeq ("$(wildcard $(openresty-zlib-dev_$(ZLIB_VER)*.deb))","")
-	sudo dpkg -i openresty-zlib-dev_$(ZLIB_VER)*.deb openresty-zlib_$(ZLIB_VER)*.deb
-else
-	sudo apt-get -qq -y install openresty-zlib-dev
-endif
-ifeq ("$(wildcard $(openresty-pcre-dev_$(PCRE_VER)*.deb))","")
-	sudo dpkg -i openresty-pcre-dev_$(PCRE_VER)*.deb openresty-pcre_$(PCRE_VER)*.deb
-else
-	sudo apt-get -qq -y install openresty-pcre-dev
-endif
-ifeq ("$(wildcard $(openresty-openssl111-debug-dev_$(SSL111_VER)*.deb))","")
-	sudo dpkg -i openresty-openssl111-debug-dev_$(SSL111_VER)*.deb openresty-openssl111-debug_$(SSL111_VER)*.deb
-else
-	sudo apt-get -qq -y install openresty-openssl111-debug-dev
-endif
-	sudo apt-get -qq -y install systemtap-sdt-dev dh-systemd
-else
-ifeq ("$(wildcard $(openresty-zlib-dev_$(ZLIB_VER)*.deb))","")
-	dpkg -i openresty-zlib-dev_$(ZLIB_VER)*.deb openresty-zlib_$(ZLIB_VER)*.deb
-else
-	apt-get -qq -y install openresty-zlib-dev
-endif
-ifeq ("$(wildcard $(openresty-pcre-dev_$(PCRE_VER)*.deb))","")
-	dpkg -i openresty-pcre-dev_$(PCRE_VER)*.deb openresty-pcre_$(PCRE_VER)*.deb
-else
-	apt-get -qq -y install openresty-pcre-dev
-endif
-ifeq ("$(wildcard $(openresty-openssl111-debug-dev_$(SSL111_VER)*.deb))","")
-	dpkg -i openresty-openssl111-debug-dev_$(SSL111_VER)*.deb openresty-openssl111-debug_$(SSL111_VER)*.deb
-else
-	apt-get -qq -y install openresty-openssl111-debug-dev
-endif
-	apt-get -qq -y install systemtap-sdt-dev dh-systemd
-endif
-
-.PHONY: openresty-debug-clean
-openresty-debug-clean:
-	-cd openresty-debug && debclean
-	find openresty-debug -maxdepth 1 ! -name 'debian' ! -name 'openresty-debug' -print | xargs rm -rf
-	rm -f openresty-debug_$(OR_VER)*.deb
-	rm -f openresty-debug-opm_$(OR_VER)*.deb
-	rm -f openresty-debug-resty_$(OR_VER)*.deb
-	rm -f openresty-debug-restydoc_$(OR_VER)*.deb
-	rm -f openresty-debug-dev_$(OR_VER)*.deb
-	rm -f openresty-debug-dbgsym_$(OR_VER)*.deb
-	rm -f openresty-debug_$(OR_VER)*.*
-
-.PHONY: openresty-valgrind-download
-openresty-valgrind-download:
-	rm -f openresty-valgrind_$(OR_VER).orig.tar.gz
-	wget -nH --cut-dirs=100 --mirror 'https://openresty.org/download/openresty-$(OR_VER).tar.gz'
-	cp openresty-$(OR_VER).tar.gz openresty-valgrind_$(OR_VER).orig.tar.gz
-
-.PHONY: openresty-valgrind-build
-openresty-valgrind-build: | build-prereqs openresty-debug-prereqs openresty-valgrind-prereqs openresty-valgrind-clean openresty-valgrind-download
-	tar xf openresty-valgrind_$(OR_VER).orig.tar.gz --strip-components=1 -C openresty-valgrind
-	cd openresty-valgrind \
-		&& tpage --define distro=$(DISTRO) debian/changelog.tt2 > debian/changelog \
-		&& debuild -sa $(OPTS) -j$(JOBS)
-	#for f in openresty-valgrind*.deb; do debsigs --sign=origin -K D5EDEB74 $$f || exit 1; done
-	if [ -f ./upload ]; then ./upload || exit 1; fi
-
-.PHONY: openresty-valgrind-prereqs
-openresty-valgrind-prereqs:
-ifneq ($(shell id -u), 0)
-	sudo apt-get -qq -y install valgrind
-else
-	apt-get -qq -y install valgrind
-endif
-
-.PHONY: openresty-valgrind-clean
-openresty-valgrind-clean:
-	-cd openresty-valgrind && debclean
-	find openresty-valgrind -maxdepth 1 ! -name 'debian' ! -name 'openresty-valgrind' -print | xargs rm -rf
-	rm -f openresty-valgrind_$(OR_VER)*.deb
-	rm -f openresty-valgrind-opm_$(OR_VER)*.deb
-	rm -f openresty-valgrind-resty_$(OR_VER)*.deb
-	rm -f openresty-valgrind-restydoc_$(OR_VER)*.deb
-	rm -f openresty-valgrind-dev_$(OR_VER)*.deb
-	rm -f openresty-valgrind-dbgsym_$(OR_VER)*.deb
-	rm -f openresty-valgrind_$(OR_VER)*.*
 
 .PHONY: lemplate-download
 lemplate-download:
