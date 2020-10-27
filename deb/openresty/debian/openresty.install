@@ -4,6 +4,5 @@ usr/local/openresty/lualib/*
 usr/local/openresty/nginx/conf/*
 usr/local/openresty/nginx/html/*
 usr/local/openresty/nginx/logs
-usr/local/openresty/nginx/modules/*
 usr/local/openresty/nginx/sbin/*
 usr/local/openresty/site/lualib
