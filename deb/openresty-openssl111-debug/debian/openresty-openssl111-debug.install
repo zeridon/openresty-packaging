@@ -1,3 +1,0 @@
-usr/local/openresty-debug/openssl111/bin/openssl
-usr/local/openresty-debug/openssl111/lib/*.so*
-usr/local/openresty-debug/openssl111/lib/*/*.so*
