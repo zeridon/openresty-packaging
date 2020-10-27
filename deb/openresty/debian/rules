@@ -13,6 +13,7 @@ DESTDIR = $(CURDIR)/debian/tmp
 
 override_dh_auto_configure:
 	./configure \
+	  git clone https://github.com/SpiderLabs/ModSecurity-nginx.git bundle/nginx-module-modsecurity
 	  --with-cc-opt="-DNGX_LUA_ABORT_AT_PANIC -I/usr/local/openresty/zlib/include -I/usr/local/openresty/pcre/include -I/usr/local/openresty/openssl111/include" \
 	  --with-ld-opt="-L/usr/local/openresty/zlib/lib -L/usr/local/openresty/pcre/lib -L/usr/local/openresty/openssl111/lib -Wl,-rpath,/usr/local/openresty/zlib/lib:/usr/local/openresty/pcre/lib:/usr/local/openresty/openssl111/lib" \
 	  --with-pcre-jit \
@@ -40,7 +41,7 @@ override_dh_auto_configure:
 	  --with-http_gunzip_module \
 	  --with-threads \
 	  --with-luajit-xcflags='-DLUAJIT_NUMMODE=2 -DLUAJIT_ENABLE_LUA52COMPAT' \
-	  --with-compat \
+	  --add-module=bundle/nginx-module-modsecurity \
 	  -j$(NJBS)
 
 override_dh_usrlocal:
