@@ -23,11 +23,12 @@ COPY buildscript /usr/local/bin
 RUN chmod +x /usr/local/bin/buildscript
 
 # add our sudo builder
-#RUN useradd builder -m -G staff,sudo && \
-#    echo "builder ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers && \
-#    mkdir -p /home/builder/debuild && \
-#    chown -R builder /home/builder
-#USER builder
-COPY devscripts-config /.devscripts
+RUN	groupadd -g 119 -o -r builder && \
+	useradd builder -g 119 -o -r -m -G staff,sudo && \
+    echo "builder ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    chown -R builder /home/builder
+
+USER builder
+COPY devscripts-config /home/builder/.devscripts
 
 # No entrypoint as this will be used by jenkins
