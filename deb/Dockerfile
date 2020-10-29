@@ -24,7 +24,7 @@ RUN chmod +x /usr/local/bin/buildscript
 
 # add our sudo builder
 RUN	groupadd -g 119 -o -r builder && \
-	useradd builder -g 119 -o -r -m -G staff,sudo && \
+	useradd builder -u 113 -g 119 -o -r -m -G staff,sudo && \
     echo "builder ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     chown -R builder /home/builder
 
