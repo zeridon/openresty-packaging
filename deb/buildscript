@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+srcpkgdir="/sources"
+cd "$srcpkgdir" || exit 1
+
+# Generate locale, if required it needs to be defined in $LOCALE env var.
+if [ -n "$LOCALE" ]; then
+  echo -e "Generating locale $LOCALE."
+  sed -i -e "s/# $LOCALE/$LOCALE/" /etc/locale.gen && \
+  locale-gen
+fi
+
+echo -e "Preparing for building."
+# Make sure we are up to date.
+sudo apt-get update -qq
+
+cd "$srcpkgdir" && \
+	make
